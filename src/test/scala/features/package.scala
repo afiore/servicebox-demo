@@ -5,12 +5,10 @@ import com.itv.bucky.Monad.Id
 import com.itv.bucky.{AmqpSimulator, RabbitSimulator, ext}
 import fs2.async.Ref
 import io.circe.Json
-import io.circe.syntax._
-import micmesmeg._
-import micmesmeg.rmq.{Declarations, ObjectStoreEvent}
-import org.http4s.Uri
-import org.http4s.client.Client
 import org.http4s.circe._
+import micmesmeg._
+import org.http4s.{HttpService, Uri}
+import org.http4s.client.Client
 import org.scalatest.Assertion
 
 package object features {
@@ -87,7 +85,9 @@ package object features {
     ext.fs2.withSimulator[TestApp](Declarations.asList) { amqpSimulator =>
       for {
         config <- Config.read
-        app <- Stream(Main.App(amqpSimulator, config, datastore)).covary[IO]
+        httpClient = Client.fromHttpService(HttpService.empty[IO])
+        app <- Stream(Main.App(amqpSimulator, httpClient, config, datastore))
+          .covary[IO]
         _ <- Stream.eval(IO.unit).concurrently(app.handlers)
         httpClient <- Stream.bracket(IO.pure(Client.fromHttpService(app.http)))(
           Stream.emit(_),

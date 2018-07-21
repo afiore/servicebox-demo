@@ -13,7 +13,7 @@ case class Handler(datastore: Datastore)
 
   override def apply(event: ObjectStoreEvent): IO[bucky.RequeueConsumeAction] =
     for {
-      _ <- IO { logger.info(s"got an object store event: event") }
+      _ <- IO { logger.info(s"got an object store event: $event") }
       _ <- handleEvent(event)
     } yield Ack
 

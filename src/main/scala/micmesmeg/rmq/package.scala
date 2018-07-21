@@ -78,8 +78,8 @@ package object rmq {
   }
 
   object Declarations {
-    val exchange = ExchangeName("minio-eventz")
-    val routingKey = RoutingKey("foo")
+    val exchange = ExchangeName("minio-event")
+    val routingKey = RoutingKey("test-events")
     val queueName = QueueName("micmesmeg")
     val declaration =
       Exchange(exchange, exchangeType = Topic, isDurable = true)

@@ -46,13 +46,19 @@ package object micmesmeg {
 
   type Datastore = Ref[IO, Map[Location, StoredObject]]
 
-  case class Config(rmq: Config.Rmq)
+  case class Config(amqp: Config.Rmq,
+                    objectStore: Config.ObjectStore,
+                    http: Config.HttpServer)
   object Config {
     import fs2.Stream
     def read: Stream[IO, Config] = Stream(
-      Config(Rmq("localhost", 5672, "guest", "guest"))
+      Config(Rmq("localhost", 5672, "guest", "guest"),
+             ObjectStore("localhost", 9000, "testKey", "testSecret"),
+             HttpServer(8080))
     )
 
     case class Rmq(host: String, port: Int, username: String, password: String)
+    case class ObjectStore(host: String, port: Int, key: String, secret: String)
+    case class HttpServer(port: Int)
   }
 }
