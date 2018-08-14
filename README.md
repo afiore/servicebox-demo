@@ -4,4 +4,4 @@ A toy app to demonstrate usage of [Servicebox](https://github.com/itv/servicebox
 
 ## Running the tests
 
-sbt ';test;it:test'
+sbt `;test;it:test`
