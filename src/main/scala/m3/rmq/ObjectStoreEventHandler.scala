@@ -1,13 +1,13 @@
-package micmesmeg.rmq
+package m3.rmq
 
 import cats.effect.IO
 import cats.syntax.functor._
 import com.itv.bucky
 import com.itv.bucky.{Ack, RequeueHandler}
 import com.typesafe.scalalogging.StrictLogging
-import micmesmeg.{Datastore, StoredObject}
+import m3.{Datastore, StoredObject}
 
-case class Handler(datastore: Datastore)
+case class ObjectStoreEventHandler(store: Datastore)
     extends RequeueHandler[IO, ObjectStoreEvent]
     with StrictLogging {
 
@@ -20,11 +20,11 @@ case class Handler(datastore: Datastore)
   private def handleEvent(event: ObjectStoreEvent): IO[Unit] =
     event match {
       case ObjectStoreEvent.Created(location, sizeBytes) =>
-        datastore.modify { m =>
-          m.updated(location, StoredObject(sizeBytes))
-        }.void
+        store.modify(_.updated(location, StoredObject(sizeBytes))).void
+
       case ObjectStoreEvent.Removed(location) =>
-        datastore.modify(_ - location).void
+        store.modify(_ - location).void
+
       case _ =>
         IO(println(s"ignoring event: $event"))
     }

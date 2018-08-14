@@ -1,4 +1,4 @@
-package micmesmeg
+package m3
 
 import cats.effect.IO
 import org.http4s.HttpService
@@ -13,7 +13,7 @@ import com.itv.bucky.{fs2 => buckyFs2, _}
 import com.itv.bucky.fs2.IOAmqpClient
 import com.itv.bucky.pattern.requeue.{RequeueOps, RequeuePolicy}
 import com.typesafe.scalalogging.StrictLogging
-import micmesmeg.rmq.ObjectStoreEvent
+import m3.rmq.ObjectStoreEvent
 import org.http4s.client.Client
 import org.http4s.client.blaze.Http1Client
 import org.http4s.server.blaze.BlazeBuilder
@@ -39,7 +39,7 @@ object Main extends StreamApp[IO] with StrictLogging {
           RequeueOps(amqpClient)
             .requeueHandlerOf[ObjectStoreEvent](
               rmq.Declarations.queueName,
-              rmq.Handler(datastore),
+              rmq.ObjectStoreEventHandler(datastore),
               RequeuePolicy(maximumProcessAttempts = 10, 3.minute),
               implicitly[PayloadUnmarshaller[ObjectStoreEvent]]
             )

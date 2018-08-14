@@ -1,14 +1,14 @@
 package integration
 
-import com.itv.servicebox.algebra.{AppTag, Location}
-import fs2.Stream
 import cats.effect.IO
-import com.itv.servicebox.interpreter._
+import com.itv.servicebox.algebra.{AppTag, Location}
 import com.itv.servicebox.docker
-import scala.concurrent.ExecutionContext.Implicits.global
+import com.itv.servicebox.interpreter._
 import com.typesafe.scalalogging.StrictLogging
-import micmesmeg.Config
-import org.scalatest.Assertion
+import fs2.Stream
+import m3.Config
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 package object deps extends StrictLogging {
   implicit val tag: AppTag = AppTag("example", "micmesmeg")
@@ -16,13 +16,12 @@ package object deps extends StrictLogging {
   def setupWithUpdatedConfig: Stream[IO, Config] =
     for {
       config <- Config.read
-      _ <- Stream.eval(IO.pure(logger.info("Loading config for test")))
+      _ <- Stream.eval(IO(logger.info("Loading config for test")))
       rmqSpec = RabbitMQ.spec
       minioSpec <- Stream.eval(Minio(config))
       runner <- Stream.bracket(IO.pure(docker.runner()(rmqSpec, minioSpec)))(
         Stream.emit(_),
-        _ => IO.unit)
-//        _.tearDown)
+        _.tearDown)
       _ <- Stream.eval(IO(logger.info(s"Base config: $config")))
 
       services <- Stream.eval(runner.setUp)
@@ -34,12 +33,6 @@ package object deps extends StrictLogging {
       _ <- Stream.eval(IO(logger.info(s"Updated config: $config")))
 
     } yield updateConfig(config)(rmqLocation, minioLocation)
-
-//  def withRunningServices(runTest: Config => IO[Assertion]): Stream[IO, Assertion] =
-//    for {
-//      config <- setupWithUpdatedConfig
-//      assertion <- Stream.eval(runTest(config))
-//    } yield assertion
 
   private def updateConfig(config: Config)(rmqLocation: Location,
                                            minioLocation: Location) = {

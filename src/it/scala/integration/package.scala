@@ -4,7 +4,7 @@ import cats.effect.IO
 import fs2.{Scheduler, Segment, Stream}
 import io.circe.Json
 import io.minio.MinioClient
-import micmesmeg.Main
+import m3.Main
 import org.http4s.Uri
 import org.http4s.circe._
 import org.http4s.client.Client
@@ -40,7 +40,7 @@ package object integration {
       scheduler.retry(isHealthy, 200.millis, _ => 500.millis, 25)
     }
 
-    def uploadJunk(filename: String, byteSize: Long, segmentSize: Int = 10000)(
+    def uploadBytes(filename: String, byteSize: Long, segmentSize: Int = 10000)(
         implicit ec: ExecutionContext): IO[Unit] =
       (for {
         is <- bytes(byteSize, segmentSize).through(fs2.io.toInputStream[IO])
@@ -95,7 +95,7 @@ package object integration {
   }
 
   object ItTestApp {
-    def apply(config: micmesmeg.Config,
+    def apply(config: m3.Config,
               httpClient: Client[IO],
               scheduler: Scheduler): ItTestApp = {
       val endpoint =
@@ -112,7 +112,8 @@ package object integration {
 
   }
 
-  def withApp(runTest: ItTestApp => IO[Assertion]): Unit = {
+  def withApp(disableShutdown: Boolean = false)(
+      runTest: ItTestApp => IO[Assertion]): Unit = {
     import scala.concurrent.ExecutionContext.Implicits.global
 
     (for {
@@ -126,9 +127,11 @@ package object integration {
         .interruptWhen(stopSignal)
         .concurrently(
           testApp.waitUntilHealthy
-            .evalMap(_ =>
-              runTest(testApp) *> IOLogger
-                .info("completed test run...") *> stopSignal.set(true)))
+            .evalMap(
+              _ =>
+                runTest(testApp) *> IOLogger
+                  .info("completed test run...") *> stopSignal.set(
+                  !disableShutdown)))
 
     } yield ()).compile.drain.unsafeRunSync()
   }

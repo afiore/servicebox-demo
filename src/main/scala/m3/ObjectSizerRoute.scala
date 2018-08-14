@@ -1,4 +1,4 @@
-package micmesmeg
+package m3
 
 import cats.effect.IO
 import org.http4s.{EntityEncoder, HttpService}

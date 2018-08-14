@@ -13,7 +13,7 @@ import io.minio.messages.{
   NotificationConfiguration,
   QueueConfiguration
 }
-import micmesmeg.Config
+import m3.Config
 
 import scala.concurrent.duration._
 
@@ -27,7 +27,7 @@ object Minio {
 
   def apply(config: Config): IO[Service.Spec[IO]] = {
     import cats.syntax.apply._
-    import micmesmeg.rmq.{Declarations => decl}
+    import m3.rmq.{Declarations => decl}
 
     import scala.collection.JavaConverters._
 
@@ -48,7 +48,7 @@ object Minio {
       config
     }
 
-    def probeIndexAndConfigBucket(endpoints: Endpoints): IO[Unit] = {
+    def connectAndSetupBucket(endpoints: Endpoints): IO[Unit] = {
       import Settings._
       for {
         l <- endpoints.locationFor[IO](port)
@@ -64,7 +64,7 @@ object Minio {
           IOLogger.info(s"Creating bucket '$bucket'...") *> IO(
             client.makeBucket(bucket))
 
-        _ <- IOLogger.info(s"getting bucket config ...")
+        _ <- IOLogger.info(s"configuring bucket notifications ...")
         _ <- IO(client.setBucketNotification(bucket, configNotifications))
 
       } yield ()
@@ -96,8 +96,7 @@ object Minio {
                 "enable" -> Json.fromBoolean(true),
                 "url" -> Json
                   .fromString(
-                    //TODO: this needs to point to host/port known before hand!!!
-                    s"amqp://${config.amqp.username}:${config.amqp.password}@rabbitmq-3-6-management:${RabbitMQ.port}"),
+                    s"amqp://${config.amqp.username}:${config.amqp.password}@${RabbitMQ.containerName}:${RabbitMQ.port}"),
                 "exchange" -> Json.fromString(decl.exchange.value),
                 "routingKey" -> Json.fromString(decl.routingKey.value),
                 "exchangeType" -> Json.fromString(
@@ -114,20 +113,24 @@ object Minio {
       .toString()
       .getBytes()
 
+    val dir = Paths.get("target", "servicebox")
+
     BindMount
-      .fromTmpFileContent[IO](Paths.get("target", "servicebox"))(
-        Paths.get("/root/.minio"))("config.json" -> configContent)
+      .fromTmpFileContent[IO](baseDir = dir)(to = Paths.get("/root/.minio"))(
+        "config.json" -> configContent)
       .map { bindMount =>
         Service.Spec[IO](
-          "minio",
-          NonEmptyList.of(
+          name = "minio",
+          containers = NonEmptyList.of(
             Container
-              .Spec("minio/minio:edge",
-                    Map.empty[String, String],
-                    Set(9000),
-                    Some(NonEmptyList.of("server", "/data")),
-                    Some(NonEmptyList.of(bindMount)))),
-          Service.ReadyCheck(probeIndexAndConfigBucket, 3.seconds, 1.minute),
+              .Spec(
+                imageName = "minio/minio:edge",
+                env = Map.empty[String, String],
+                ports = Set(PortSpec.assign(9000)),
+                command = Some(NonEmptyList.of("server", "/data")), //minio server /data
+                mounts = Some(NonEmptyList.of(bindMount))
+              )),
+          Service.ReadyCheck(connectAndSetupBucket, 3.seconds, 1.minute),
           dependencies = Set(RabbitMQ.spec.ref)
         )
       }

@@ -1,4 +1,4 @@
-package micmesmeg
+package m3
 
 import cats.instances.either._
 import cats.syntax.either._

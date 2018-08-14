@@ -1,8 +1,8 @@
-package micmesmeg
+package m3
 
 import cats.effect.IO
 import io.circe.Json
-import micmesmeg.rmq.Declarations.queueName
+import m3.rmq.Declarations.queueName
 import org.http4s.client.Client
 import org.http4s.dsl.io._
 import org.http4s.headers.Authorization

@@ -1,21 +1,18 @@
 package integration
 
-import java.nio.file.Paths
-
-import cats.effect.IO
 import io.circe.Json
-import micmesmeg.ObjectSize._
+import m3.ObjectSize._
 import org.scalatest.FreeSpec
 import org.scalatest.Matchers._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class MicMesMegTest extends FreeSpec {
-  "The Micro Mega app" - {
+class M3IntegrationTest extends FreeSpec {
+  "The M3 app" - {
     "groups uploaded assets by size" in {
-      withApp { app =>
+      withApp(disableShutdown = false) { app =>
         for {
-          _ <- app.uploadJunk("file-a", 100)
+          _ <- app.uploadBytes("file-a", 100)
           objectsBySize <- app.pollObjectsUntil(_.exists(_.endsWith("file-a")))
 
         } yield

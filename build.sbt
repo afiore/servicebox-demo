@@ -4,7 +4,7 @@ lazy val circeVersion      = "0.9.1"
 lazy val scalaPactVersion  = "2.2.3"
 lazy val buckyVersion      = "1.3.0"
 lazy val scalatestVersion  = "3.0.1"
-lazy val serviceboxVersion = "0.1.9-SNAPSHOT"
+lazy val serviceboxVersion = "0.2.0"
 lazy val minioVersion      = "4.0.2"
 lazy val IntegrationTest = config("it") extend Test
 
@@ -35,7 +35,6 @@ lazy val root = (project in file("."))
       "com.itv"                     %% "bucky-test"               % buckyVersion      % "test",
       "com.itv"                     %% "servicebox-core"          % serviceboxVersion % "it,test",
       "com.itv"                     %% "servicebox-docker"        % serviceboxVersion % "it,test",
-      "com.itv"                     %% "servicebox-docker-io"     % serviceboxVersion % "it,test",
       "io.minio"                     % "minio"                    % minioVersion % "it,test",
       "org.scalatest"               %% "scalatest"                % "3.0.5" % "test,it",
       "net.logstash.logback"         % "logstash-logback-encoder" % "4.6",

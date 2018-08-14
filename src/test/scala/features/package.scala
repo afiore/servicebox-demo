@@ -6,7 +6,7 @@ import com.itv.bucky.{AmqpSimulator, RabbitSimulator, ext}
 import fs2.async.Ref
 import io.circe.Json
 import org.http4s.circe._
-import micmesmeg._
+import m3._
 import org.http4s.{HttpService, Uri}
 import org.http4s.client.Client
 import org.scalatest.Assertion
@@ -27,7 +27,7 @@ package object features {
         .expect[Json](Uri(path = "/"))
 
     private def publishEvent(event: Json): IO[bucky.ConsumeAction] = {
-      val decl = micmesmeg.rmq.Declarations
+      val decl = m3.rmq.Declarations
       val publishCommand = RabbitSimulator.stringPublishCommandBuilder using
         decl.exchange using decl.routingKey
 
@@ -78,7 +78,7 @@ package object features {
     import com.itv.bucky.future.SameThreadExecutionContext.implicitly
     implicit val ioMonad = com.itv.bucky.fs2.ioMonadError
     implicit val fMonad = com.itv.bucky.future.futureMonad
-    import micmesmeg.rmq.Declarations
+    import m3.rmq.Declarations
 
     val datastore =
       Ref[IO, Map[Location, StoredObject]](testData.fileInfos).unsafeRunSync()

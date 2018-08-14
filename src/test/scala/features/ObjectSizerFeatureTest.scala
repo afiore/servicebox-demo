@@ -1,11 +1,10 @@
 package features
 
-import micmesmeg._
-import micmesmeg.rmq._
+import m3._
 import org.scalatest.FreeSpec
 import org.scalatest.Matchers._
 import io.circe.Json
-import micmesmeg.ObjectSize._
+import m3.ObjectSize._
 
 class ObjectSizerFeatureTest extends FreeSpec {
   "The object sizer" - {
@@ -29,23 +28,22 @@ class ObjectSizerFeatureTest extends FreeSpec {
     }
 
     "re-sizes an updated object from micro to macro" in {
-      val testData =
-        TestData(Map(Location("some-bucket", "key") -> StoredObject(100)))
-
-      withApp(testData) { app =>
-        for {
-          _ <- app.publishObjectCreated(Location("some-bucket", "key"),
-                                        5000000000L)
-          objectsBySize <- app.objectsBySize
-        } yield
-          objectsBySize should ===(
-            Json.obj(
-              Mega.id -> Json.obj(
-                "s3://some-bucket/key" -> Json.obj(
-                  "sizeBytes" -> Json.fromLong(5000000000L)
+      withApp(
+        TestData(Map(Location("some-bucket", "key") -> StoredObject(100)))) {
+        app =>
+          for {
+            _ <- app.publishObjectCreated(Location("some-bucket", "key"),
+                                          5000000000L)
+            objectsBySize <- app.objectsBySize
+          } yield
+            objectsBySize should ===(
+              Json.obj(
+                Mega.id -> Json.obj(
+                  "s3://some-bucket/key" -> Json.obj(
+                    "sizeBytes" -> Json.fromLong(5000000000L)
+                  )
                 )
-              )
-            ))
+              ))
       }
     }
 

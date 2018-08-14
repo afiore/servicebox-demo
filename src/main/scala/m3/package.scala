@@ -1,10 +1,9 @@
 import cats.effect.IO
-import com.itv.bucky.QueueName
 import fs2.async.Ref
 import io.circe.generic.semiauto._
 import io.circe.{Encoder, KeyEncoder}
 
-package object micmesmeg {
+package object m3 {
 
   case class Location(bucket: String, key: String)
   object Location {
